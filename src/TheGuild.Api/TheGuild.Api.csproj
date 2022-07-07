@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-TheGuild.Api-DB667E6C-48A4-4114-BD1F-E11D76C58AEF</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AspNet.Security.OAuth.Discord" Version="6.0.6" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\TheGuild.Api.Models\TheGuild.Api.Models.csproj" />
+      <ProjectReference Include="..\TheGuild.DataLayer\TheGuild.DataLayer.csproj" />
+    </ItemGroup>
+
+</Project>
