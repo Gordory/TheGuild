@@ -1,78 +1,78 @@
 # TheGuild
 
-**TheGuild** — платформа для управления гильдиями в World of Warcraft. Backend-сервис предоставляет REST API для ведения записей об участниках, посещаемости рейдов, ростере и банке гильдии. Discord-интеграция позволяет управлять гильдией прямо из сервера без сторонних инструментов.
+**TheGuild** is a guild management platform for World of Warcraft. The backend service exposes a REST API for member records, raid attendance, roster and guild bank. A Discord integration lets officers run the guild straight from their server, without third-party tools.
 
-> ⚠️ **Статус: ранняя разработка.** Сервис не готов к использованию. Ниже описано фактическое состояние кода, а не целевое.
+> ⚠️ **Status: early development.** The service is not usable yet. What follows describes the code as it actually stands, not where it is headed.
 
-> Проект развивается по freemium-модели: базовые функции бесплатны, расширенные возможности — по подписке.
+> The project follows a freemium model: core features are free, advanced capabilities come with a subscription.
 
-## Текущее состояние
+## Current state
 
-### Работает
+### Working
 
-- **Аутентификация по API Key** — заголовок `X-API-KEY` со значением-GUID. Ключ ищется в MongoDB, поддерживается привязка к Discord-боту (`DiscordBotApiKeyBinding`); отключённые (`Enabled: false`) ключи отклоняются. Схема зарегистрирована и используется по умолчанию.
-- **Доменные модели и хранилище** — `AttendanceWarning` (типы `Absence` / `Late`, публичный и приватный комментарий), `Guild` / `GuildRole` / `GuildPermissions`, репозитории MongoDB поверх общей CRUD-обвязки.
-- **Расчёт прав** — `GuildPermissionsProvider` собирает разрешения участника из привязок гильдейских ролей к Discord-ролям и к конкретным пользователям, дочитывая роли участника из Discord API.
-- **Обёртка над Discord.Net** — `IDiscordClientFactory` создаёт `DiscordRestClient` по bot-токену (`Discord:Bot:Token`).
+- **API key authentication** — an `X-API-KEY` header carrying a GUID. The key is looked up in MongoDB and can be bound to a Discord bot (`DiscordBotApiKeyBinding`); disabled keys (`Enabled: false`) are rejected. The scheme is registered and used as the default.
+- **Domain models and storage** — `AttendanceWarning` (types `Absence` / `Late`, public and private comment), `Guild` / `GuildRole` / `GuildPermissions`, and MongoDB repositories on top of a shared CRUD base.
+- **Permission resolution** — `GuildPermissionsProvider` merges a member's permissions from guild roles bound to Discord roles and from per-user bindings, reading the member's roles from the Discord API.
+- **Discord.Net wrapper** — `IDiscordClientFactory` builds a `DiscordRestClient` from a bot token (`Discord:Bot:Token`).
 
-### Не работает / в процессе
+### Not working yet
 
-- **Attendance API** — `AttendanceWarningController` и регистрация `IAttendanceWarningService` закомментированы: идёт рефакторинг слоя авторизации. Публичных эндпоинтов посещаемости сейчас нет.
-- **Discord OAuth2** — провайдер подключён (`AspNet.Security.OAuth.Discord` + cookie-схема), но эндпоинтов входа и callback нет, поэтому пользовательский сценарий логина недоступен.
-- **Discord-бот** — проект `TheGuild.External.Discord` регистрируется через LightInject и в API-хост пока не подключён; секции `Discord:Bot` в конфигурации нет.
-- **`TestController`** (`POST/GET /test`) — временные леса для ручной проверки репозитория, не часть API.
+- **Attendance API** — `AttendanceWarningController` and the `IAttendanceWarningService` registration are commented out while the authorization layer is being reworked. There are no public attendance endpoints right now.
+- **Discord OAuth2** — the provider is wired up (`AspNet.Security.OAuth.Discord` plus a cookie scheme), but there are no sign-in or callback endpoints, so the user login flow is unavailable.
+- **Discord bot** — `TheGuild.External.Discord` registers through LightInject and is not yet plugged into the API host; the configuration has no `Discord:Bot` section.
+- **`TestController`** (`POST/GET /test`) — temporary scaffolding for exercising the repository by hand, not part of the API.
 
 ## Roadmap
 
-Цели, к которым идёт проект:
+Where the project is headed:
 
-- Discord-бот — управление гильдией через slash-команды прямо в Discord
-- Рейд-менеджмент — запись на рейды, составы, логи
-- Ростер гильдии — управление участниками, классами, ролями
-- Банк гильдии / лут — учёт предметов и распределение лута
-- Уведомления в Discord — автоматические сообщения в каналы
-- Мобильное приложение — push-уведомления и управление на ходу
-- Desktop-приложение — синхронизация данных
-- WoW-аддоны — синхронизация данных прямо из игры
-- Guild Armory — публичная страница гильдии
+- Discord bot — manage the guild through slash commands inside Discord
+- Raid management — sign-ups, rosters, logs
+- Guild roster — members, classes, roles
+- Guild bank and loot — item tracking and loot distribution
+- Discord notifications — automated channel messages
+- Mobile app — push notifications and management on the go
+- Desktop app — data synchronization
+- WoW addons — sync data straight from the game
+- Guild Armory — public guild page
 
-## Архитектура
+## Architecture
 
 ```
 TheGuild.sln
 ├── src/
 │   ├── TheGuild.Api               # ASP.NET Core 6 REST API
-│   ├── TheGuild.Api.Models        # DTO и модели API-слоя
-│   ├── TheGuild.DataLayer         # Репозитории (MongoDB)
-│   ├── TheGuild.DataLayer.Models  # Сущности базы данных
-│   └── TheGuild.Infrastructure.MongoDb  # Подключение и коллекции MongoDB
-└── TheGuild.External.Discord      # Обёртка над Discord.Net
+│   ├── TheGuild.Api.Models        # API-layer DTOs and models
+│   ├── TheGuild.DataLayer         # Repositories (MongoDB)
+│   ├── TheGuild.DataLayer.Models  # Database entities
+│   └── TheGuild.Infrastructure.MongoDb  # MongoDB connection and collections
+└── TheGuild.External.Discord      # Discord.Net wrapper
 ```
 
-## Требования
+## Requirements
 
 - [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
 - [MongoDB](https://www.mongodb.com/)
-- Discord Application (OAuth2 + Bot Token) — [Discord Developer Portal](https://discord.com/developers/applications)
+- A Discord application (OAuth2 + bot token) — [Discord Developer Portal](https://discord.com/developers/applications)
 
-## Быстрый старт
+## Getting started
 
-### 1. Клонировать репозиторий
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Gordory/TheGuild.git
 cd TheGuild
 ```
 
-### 2. Настроить конфигурацию
+### 2. Configure
 
-`appsettings.json` — шаблон с плейсхолдерами, он лежит в репозитории. Реальные значения кладутся в `appsettings.Development.json`, который игнорируется git'ом:
+`appsettings.json` is the placeholder template kept in the repository. Real values belong in `appsettings.Development.json`, which is gitignored:
 
 ```bash
 cp src/TheGuild.Api/appsettings.json src/TheGuild.Api/appsettings.Development.json
 ```
 
-Заполни в `appsettings.Development.json`:
+Fill in `appsettings.Development.json`:
 
 ```json
 {
@@ -92,26 +92,26 @@ cp src/TheGuild.Api/appsettings.json src/TheGuild.Api/appsettings.Development.js
 }
 ```
 
-> Никогда не коммить реальные секреты. Файлы `appsettings.*.json`, кроме шаблона, в `.gitignore`.
+> Never commit real credentials. Every `appsettings.<Environment>.json` is gitignored; only the template is tracked.
 
-### 3. Запуск
+### 3. Run
 
 ```bash
 cd src/TheGuild.Api
 dotnet run
 ```
 
-API поднимется на `https://localhost:14122` (профиль из `Properties/launchSettings.json`). Swagger UI — `https://localhost:14122/swagger`, он включён только в окружении `Development`.
+The API starts on `https://localhost:14122` (the profile in `Properties/launchSettings.json`). Swagger UI is at `https://localhost:14122/swagger` and is enabled only in the `Development` environment.
 
-Контейнеризации пока нет: `Dockerfile` и `docker-compose.yml` в репозитории отсутствуют.
+There is no containerization yet: the repository has no `Dockerfile` or `docker-compose.yml`.
 
-## Аутентификация
+## Authentication
 
-| Схема | Применение | Как передаётся | Статус |
-|-------|-----------|----------------|--------|
-| **API Key** | Сервисные клиенты (Discord-бот) | Заголовок `X-API-KEY: <guid>` | Работает |
-| **Discord OAuth2** | Пользователи гильдии | Cookie-сессия | Подключён, эндпоинтов входа нет |
+| Scheme | Used by | Transport | Status |
+|--------|---------|-----------|--------|
+| **API key** | Service clients (Discord bot) | `X-API-KEY: <guid>` header | Working |
+| **Discord OAuth2** | Guild members | Cookie session | Wired up, no sign-in endpoints |
 
-## Лицензия
+## License
 
 [MIT](LICENSE) © 2022 Nikita Ilinykh
