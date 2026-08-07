@@ -356,3 +356,14 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+
+# Sensitive config — never commit real credentials.
+# appsettings.json is the placeholder template and stays tracked:
+# the pattern below matches only appsettings.<Environment>.json
+appsettings.*.json
+secrets.json
+*.env
+
+# macOS metadata
+.DS_Store
+._*
