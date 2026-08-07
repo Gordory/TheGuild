@@ -24,17 +24,32 @@
 
 ## Roadmap
 
-Where the project is headed:
+Ordered by dependency rather than by date — there are no committed timelines.
 
-- Discord bot — manage the guild through slash commands inside Discord
-- Raid management — sign-ups, rosters, logs
-- Guild roster — members, classes, roles
-- Guild bank and loot — item tracking and loot distribution
-- Discord notifications — automated channel messages
-- Mobile app — push notifications and management on the go
-- Desktop app — data synchronization
-- WoW addons — sync data straight from the game
-- Guild Armory — public guild page
+### Foundation — in progress
+
+Everything below this section is blocked on it.
+
+- Finish the authorization rework and bring the attendance API back online
+- Register the permission and guild dependencies in the API host, and plug `TheGuild.External.Discord` into it
+- Tests for permission resolution — a mistake there leaks private comments between members
+- Per-guild data isolation enforced on every repository query
+- CI, plus a `Dockerfile` and Compose setup for local runs
+
+### Next — the core loop
+
+- **Guild roster** — members, classes, roles. Everything else depends on it: attendance currently stores a bare `DiscordUserId` with no member entity behind it
+- **Attendance** — endpoints rebuilt on top of the roster
+- **Discord bot** — run the guild through slash commands, including automated channel notifications
+
+### Later
+
+- **Raid management** — sign-ups, compositions, raid history
+- **Guild bank and loot** — item tracking and loot distribution
+- **Subscriptions** — billing, plan entitlements and free-tier limits behind the freemium model
+- **Guild Armory** — public guild page
+- **Companion clients** — mobile app with push notifications, desktop app
+- **WoW addon** — the addon writes to `SavedVariables` and the desktop companion uploads the file; the addon API has no network access, so in-game data cannot reach the service on its own
 
 ## Architecture
 
