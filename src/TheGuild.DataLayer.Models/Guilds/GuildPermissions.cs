@@ -1,6 +1,6 @@
-using TheGuild.Api.Models.Attendance.Warnings;
+using TheGuild.DataLayer.Models.Attendance.Warnings;
 
-namespace TheGuild.Api.Models.Guild;
+namespace TheGuild.DataLayer.Models.Guilds;
 
 public record GuildPermissions
 {

@@ -1,11 +1,11 @@
-﻿namespace TheGuild.Api.Models.Guild;
+﻿namespace TheGuild.Api.Models.Guilds;
 
 public record Guild
 {
     public Guid Id { get; init; }
 
     public string? UniqueName { get; init; }
-    
+
     public ulong DiscordServerId { get; init; }
 
     public string Name { get; init; }

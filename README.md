@@ -95,6 +95,9 @@ Fill in `appsettings.Development.json`:
     "OAuth2": {
       "ClientId": "<your-discord-client-id>",
       "ClientSecret": "<your-discord-client-secret>"
+    },
+    "Bot": {
+      "Token": "<your-discord-bot-token>"
     }
   },
   "MongoDB": {

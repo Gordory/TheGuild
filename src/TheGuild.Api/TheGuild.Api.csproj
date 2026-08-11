@@ -13,8 +13,13 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\TheGuild.External.Discord\TheGuild.External.Discord.csproj" />
       <ProjectReference Include="..\TheGuild.Api.Models\TheGuild.Api.Models.csproj" />
       <ProjectReference Include="..\TheGuild.DataLayer\TheGuild.DataLayer.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Services\Guilds" />
     </ItemGroup>
 
 </Project>

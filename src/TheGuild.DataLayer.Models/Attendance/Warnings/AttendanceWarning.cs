@@ -1,10 +1,11 @@
 using MongoDB.Bson.Serialization.Attributes;
 using TheGuild.Infrastructure.MongoDb.Collections;
+using TheGuild.Infrastructure.MongoDb.Entities;
 
 namespace TheGuild.DataLayer.Models.Attendance.Warnings;
 
 [MongoCollection("AttendanceWarnings")]
-public record AttendanceWarning
+public record AttendanceWarning : IIdentifiedEntity<Guid>
 {
     [BsonId]
     public Guid Id { get; init; }

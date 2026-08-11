@@ -4,7 +4,9 @@ namespace TheGuild.Api.Services.Attendance;
 
 public record AttendanceWarningCreateRequest
 {
-    public long DiscordUserId { get; init; }
+    public ulong DiscordServerId { get; init; }
+
+    public ulong DiscordUserId { get; init; }
 
     public AttendanceWarningType Type { get; init; }
 
