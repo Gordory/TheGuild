@@ -1,11 +1,12 @@
 using MongoDB.Bson.Serialization.Attributes;
+using TheGuild.DataLayer.Models.Access;
 using TheGuild.Infrastructure.MongoDb.Collections;
 using TheGuild.Infrastructure.MongoDb.Entities;
 
 namespace TheGuild.DataLayer.Models.Attendance.Warnings;
 
 [MongoCollection("AttendanceWarnings")]
-public record AttendanceWarning : IIdentifiedEntity<Guid>
+public record AttendanceWarning : IIdentifiedEntity<Guid>, IOwnedByGuildMember
 {
     [BsonId]
     public Guid Id { get; init; }
@@ -27,4 +28,6 @@ public record AttendanceWarning : IIdentifiedEntity<Guid>
     public DateTime Created { get; init; }
 
     public DateTime? Updated { get; init; }
+
+    public ulong OwnerDiscordUserId => DiscordUserId;
 }
