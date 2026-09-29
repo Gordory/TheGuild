@@ -6,6 +6,7 @@ using TheGuild.Api.Access;
 using TheGuild.Api.Authentication;
 using TheGuild.Api.Authentication.ApiKey;
 using TheGuild.Api.Authorization;
+using TheGuild.Api.Services.Attendance;
 using TheGuild.DataLayer.Access;
 using TheGuild.DataLayer.Attendance.Warnings;
 using TheGuild.DataLayer.Authentication;
@@ -21,7 +22,7 @@ var mongoDbConfigurationSection = builder.Configuration.GetSection(MongoDbConfig
 var mongoDbConfiguration = mongoDbConfigurationSection.Get<MongoDbConfiguration>();
 builder.Services.Configure<MongoDbConfiguration>(mongoDbConfigurationSection);
 
-//builder.Services.AddTransient<IAttendanceWarningService, AttendanceWarningService>();
+builder.Services.AddTransient<IAttendanceWarningService, AttendanceWarningService>();
 builder.Services.AddTransient<IAttendanceWarningRepository, AttendanceWarningRepository>();
 builder.Services.AddSingleton<IApiKeyBindingRepository, ApiKeyBindingRepository>();
 builder.Services.AddSingleton<IGuildRepository, GuildRepository>();
@@ -70,7 +71,7 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<GuildAccessDeniedExceptionFilter>());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

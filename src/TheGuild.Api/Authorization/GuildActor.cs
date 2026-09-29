@@ -4,7 +4,7 @@ namespace TheGuild.Api.Authorization;
 /// Who is acting, and what they may do, resolved once per request. Holds no Discord or database
 /// handles, so authorization decisions are a pure function of it plus the resource at hand.
 /// </summary>
-public sealed class GuildActor
+public sealed record GuildActor
 {
     public ulong DiscordServerId { get; init; }
 
