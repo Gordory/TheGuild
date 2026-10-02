@@ -1,5 +1,9 @@
 # Guild authorization: catalogued permissions, roles over Discord
 
+> Superseded in part by [the identity design](2026-10-02-identity-and-net10-design.md): a member is now
+> identified by their account here, not by a Discord id. Everything below about the permission model
+> still holds.
+
 Design record for the permission system. Written after the design dialogue, before implementation,
 and kept as the explanation of why the model looks the way it does.
 
