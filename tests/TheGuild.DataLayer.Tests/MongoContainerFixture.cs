@@ -10,9 +10,7 @@ namespace TheGuild.DataLayer.Tests;
 /// </summary>
 public class MongoContainerFixture : IAsyncLifetime
 {
-    private readonly MongoDbContainer _container = new MongoDbBuilder()
-        .WithImage("mongo:6.0")
-        .Build();
+    private readonly MongoDbContainer _container = new MongoDbBuilder("mongo:6.0").Build();
 
     public IMongoDatabase Database { get; private set; } = null!;
 
