@@ -5,9 +5,15 @@ using TheGuild.Infrastructure.MongoDb.Repositories;
 
 namespace TheGuild.DataLayer.Attendance.Warnings;
 
-public interface IAttendanceWarningRepository : ICrudRepository<AttendanceWarning, Guid>
+public interface IAttendanceWarningRepository : IRepositoryBase<AttendanceWarning, Guid>
 {
-    Task<ICollection<AttendanceWarning>> Find(DateTime dateTime, ulong? discordUserId = null);
+    Task<ICollection<AttendanceWarning>> Find(ulong discordServerId, DateTime dateTime, Guid? userId = null);
+
+    /// <summary>
+    /// Guild-scoped counterpart of <see cref="IReadOnlyRepository{TEntity,TId}.FindAsync"/>: the id alone
+    /// is guessable across guilds, so callers serving a request must go through this overload.
+    /// </summary>
+    Task<AttendanceWarning?> FindAsync(ulong discordServerId, Guid id);
 }
 
 public class AttendanceWarningRepository : RepositoryBase<AttendanceWarning, Guid>, IAttendanceWarningRepository
@@ -19,39 +25,24 @@ public class AttendanceWarningRepository : RepositoryBase<AttendanceWarning, Gui
     {
     }
 
-    public override async Task<AttendanceWarning> GetAsync(Guid id)
-    {
-        var cursor = await GetCollection(ReadPreferenceMode.SecondaryPreferred, readConcern: ReadConcern)
-            .FindAsync(FilterId(id));
-
-        return await cursor.FirstOrDefaultAsync() 
-               ?? throw new KeyNotFoundException($"AttendanceWarning with id was not found: {id}");
-    }
-
-    public override async Task<ICollection<AttendanceWarning>> GetAllAsync()
-    {
-        var cursor = await GetCollection(ReadPreferenceMode.SecondaryPreferred, readConcern: ReadConcern)
-            .FindAsync(Builders<AttendanceWarning>.Filter.Empty);
-
-        return await cursor.ToListAsync();
-    }
-
-    public async Task<ICollection<AttendanceWarning>> Find(DateTime dateTime, ulong? discordUserId = null)
+    public async Task<ICollection<AttendanceWarning>> Find(ulong discordServerId, DateTime dateTime, Guid? userId = null)
     {
         var utcDate = dateTime.ToUniversalTime().Date;
 
-        var filter = Builders<AttendanceWarning>.Filter.Or(
-            Builders<AttendanceWarning>.Filter.And(
-                Builders<AttendanceWarning>.Filter.Eq(x => x.DateStart, utcDate),
-                Builders<AttendanceWarning>.Filter.Eq(x => x.DateEnd, null)),
-            Builders<AttendanceWarning>.Filter.And(
-                Builders<AttendanceWarning>.Filter.Lte(x => x.DateStart, utcDate),
-                Builders<AttendanceWarning>.Filter.Gte(x => x.DateEnd, utcDate)));
+        var filter = Builders<AttendanceWarning>.Filter.And(
+            FilterDiscordServerId(discordServerId),
+            Builders<AttendanceWarning>.Filter.Or(
+                Builders<AttendanceWarning>.Filter.And(
+                    Builders<AttendanceWarning>.Filter.Eq(x => x.DateStart, utcDate),
+                    Builders<AttendanceWarning>.Filter.Eq(x => x.DateEnd, null)),
+                Builders<AttendanceWarning>.Filter.And(
+                    Builders<AttendanceWarning>.Filter.Lte(x => x.DateStart, utcDate),
+                    Builders<AttendanceWarning>.Filter.Gte(x => x.DateEnd, utcDate))));
 
-        if (discordUserId != null)
+        if (userId != null)
             filter = Builders<AttendanceWarning>.Filter.And(
                 filter,
-                Builders<AttendanceWarning>.Filter.Eq(x => x.DiscordUserId, discordUserId));
+                Builders<AttendanceWarning>.Filter.Eq(x => x.UserId, userId));
 
         var collection = await GetCollection(ReadPreferenceMode.SecondaryPreferred, readConcern: ReadConcern)
             .FindAsync(filter);
@@ -59,30 +50,20 @@ public class AttendanceWarningRepository : RepositoryBase<AttendanceWarning, Gui
         return await collection.ToListAsync();
     }
 
-    public override async Task<AttendanceWarning> CreateAsync(AttendanceWarning entity)
+    public async Task<AttendanceWarning?> FindAsync(ulong discordServerId, Guid id)
     {
-        await GetCollection(ReadPreferenceMode.Primary, WriteConcern.WMajority)
-            .InsertOneAsync(entity);
+        var filter = Builders<AttendanceWarning>.Filter.And(
+            FilterId(id),
+            FilterDiscordServerId(discordServerId));
 
-        return entity;
+        var cursor = await GetCollection(ReadPreferenceMode.SecondaryPreferred, readConcern: ReadConcern)
+            .FindAsync(filter);
+
+        return await cursor.FirstOrDefaultAsync();
     }
 
-    public override async Task<AttendanceWarning> UpdateAsync(AttendanceWarning entity)
+    private static FilterDefinition<AttendanceWarning> FilterDiscordServerId(ulong discordServerId)
     {
-        await GetCollection(ReadPreferenceMode.Primary, WriteConcern.WMajority)
-            .ReplaceOneAsync(FilterId(entity.Id), entity);
-
-        return entity;
-    }
-
-    public override async Task DeleteAsync(Guid id)
-    {
-        await GetCollection(ReadPreferenceMode.PrimaryPreferred, WriteConcern.WMajority)
-            .DeleteOneAsync(FilterId(id));
-    }
-
-    private static FilterDefinition<AttendanceWarning> FilterId(Guid id)
-    {
-        return Builders<AttendanceWarning>.Filter.Eq(x => x.Id, id);
+        return Builders<AttendanceWarning>.Filter.Eq(x => x.DiscordServerId, discordServerId);
     }
 }

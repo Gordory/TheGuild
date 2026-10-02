@@ -1,0 +1,15 @@
+<Project>
+
+    <PropertyGroup>
+        <!-- One target framework for every project: eight copies of this drifted apart too easily. -->
+        <TargetFramework>net10.0</TargetFramework>
+
+        <!-- The repository sits on a non-APFS volume, where macOS stores extended attributes in
+             AppleDouble "._" sidecars next to every file. Those are binary, and the SDK would
+             otherwise glob "._Foo.cs" in as a source file and fail the build with CS2015.
+             DefaultItemExcludes is the hook that runs before the globs expand; a Compile Remove
+             item here would not, since this file is imported before the SDK defines them. -->
+        <DefaultItemExcludes>$(DefaultItemExcludes);**/._*</DefaultItemExcludes>
+    </PropertyGroup>
+
+</Project>

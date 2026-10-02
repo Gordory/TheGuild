@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TheGuild.Api.Authentication;
 using TheGuild.Api.Authorization;
 using TheGuild.Api.Models.Attendance.Warnings;
 using TheGuild.Api.Services.Attendance;
@@ -9,70 +8,69 @@ namespace TheGuild.Api.Controllers.Attendance;
 
 [Authorize]
 [ApiController]
-[Route("{serverId}/attendance/warning/")]
+[Route("{serverId}/attendance/warning")]
 public class AttendanceWarningController : ControllerBase
 {
     private readonly IAttendanceWarningService _service;
-    private readonly IAuthenticationChecker _authenticationChecker;
-    private readonly IAuthorizedGuildUserProvider _authorizedGuildUserProvider;
+    private readonly IGuildActorAccessor _guildActorAccessor;
 
     public AttendanceWarningController(
         IAttendanceWarningService service,
-        IAuthenticationChecker authenticationChecker,
-        IAuthorizedGuildUserProvider authorizedGuildUserProvider)
+        IGuildActorAccessor guildActorAccessor)
     {
         _service = service;
-        _authenticationChecker = authenticationChecker;
-        _authorizedGuildUserProvider = authorizedGuildUserProvider;
+        _guildActorAccessor = guildActorAccessor;
     }
 
     [HttpGet("{attendanceWarningId:guid}")]
-    public async Task<AttendanceWarning> Get(ulong serverId, Guid attendanceWarningId)
+    public async Task<ActionResult<AttendanceWarning>> Get(ulong serverId, Guid attendanceWarningId)
     {
-        await _authenticationChecker.EnsureUserIsAuthenticatedAsync(User);
-        var authorizedUser = await _authorizedGuildUserProvider.GetAsync(serverId, User);
+        var actor = await GetActorAsync(serverId);
 
-        return await _service.GetAsync(authorizedUser, attendanceWarningId);
+        var warning = await _service.GetAsync(actor, attendanceWarningId);
+
+        return warning is null ? NotFound() : warning;
     }
 
     [HttpGet]
-    public async Task<ICollection<AttendanceWarning>> Find(ulong serverId, DateTime? dateTime)
+    public async Task<ICollection<AttendanceWarning>> Find(ulong serverId, DateTime? date, ulong? discordUserId)
     {
-        await _authenticationChecker.EnsureUserIsAuthenticatedAsync(User);
-        var authorizedUser = await _authorizedGuildUserProvider.GetAsync(serverId, User);
+        var actor = await GetActorAsync(serverId);
 
-        return await _service.FindAsync(authorizedUser, dateTime);
+        return await _service.FindAsync(actor, date ?? DateTime.UtcNow, discordUserId);
     }
 
     [HttpPost]
-    public async Task<AttendanceWarning> Create(ulong serverId, AttendanceWarningCreateRequest attendanceWarningCreateRequest)
+    public async Task<AttendanceWarning> Create(ulong serverId, AttendanceWarningCreateRequest request)
     {
-        await _authenticationChecker.EnsureUserIsAuthenticatedAsync(User);
-        var authorizedUser = await _authorizedGuildUserProvider.GetAsync(serverId, User);
+        var actor = await GetActorAsync(serverId);
 
-        return await _service.CreateAsync(authorizedUser, attendanceWarningCreateRequest);
+        return await _service.CreateAsync(actor, request);
     }
 
     [HttpPut("{attendanceWarningId:guid}")]
-    public async Task<AttendanceWarning> Update(
-        ulong serverId, 
+    public async Task<ActionResult<AttendanceWarning>> Update(
+        ulong serverId,
         Guid attendanceWarningId,
-        AttendanceWarningUpdateRequest attendanceWarningUpdateRequest)
+        AttendanceWarningUpdateRequest request)
     {
-        await _authenticationChecker.EnsureUserIsAuthenticatedAsync(User);
-        var authorizedUser = await _authorizedGuildUserProvider.GetAsync(serverId, User);
+        var actor = await GetActorAsync(serverId);
 
-        return await _service.UpdateAsync(authorizedUser, attendanceWarningId, attendanceWarningUpdateRequest);
+        var warning = await _service.UpdateAsync(actor, attendanceWarningId, request);
+
+        return warning is null ? NotFound() : warning;
     }
 
     [HttpDelete("{attendanceWarningId:guid}")]
-    public async Task<AttendanceWarning> Delete(
-        ulong serverId, 
-        Guid attendanceWarningId)
+    public async Task<IActionResult> Delete(ulong serverId, Guid attendanceWarningId)
     {
-        await _authenticationChecker.EnsureUserIsAuthenticatedAsync(User);
-        var authorizedUser = await _authorizedGuildUserProvider.GetAsync(serverId, User);
+        var actor = await GetActorAsync(serverId);
 
-        return await _service.DeleteAsync(authorizedUser, attendanceWarningId);
+        return await _service.DeleteAsync(actor, attendanceWarningId) ? NoContent() : NotFound();
+    }
+
+    private Task<GuildActor> GetActorAsync(ulong serverId)
+    {
+        return _guildActorAccessor.GetAsync(serverId, User);
     }
 }

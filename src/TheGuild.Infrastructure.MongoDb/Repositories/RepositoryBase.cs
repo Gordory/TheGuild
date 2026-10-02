@@ -1,9 +1,11 @@
 ﻿using MongoDB.Driver;
 using TheGuild.Infrastructure.MongoDb.Collections;
+using TheGuild.Infrastructure.MongoDb.Entities;
 
 namespace TheGuild.Infrastructure.MongoDb.Repositories;
 
 public abstract class RepositoryBase<TEntity, TId> : IRepositoryBase<TEntity, TId>
+    where TEntity : IIdentifiedEntity<TId>
 {
     protected readonly IMongoDatabase MongoDatabase;
 
@@ -33,13 +35,46 @@ public abstract class RepositoryBase<TEntity, TId> : IRepositoryBase<TEntity, TI
             });
     }
 
-    public abstract Task<TEntity> GetAsync(TId id);
+    public virtual async Task<TEntity?> FindAsync(TId id)
+    {
+        var cursor = await GetCollection(ReadPreferenceMode.SecondaryPreferred, readConcern: ReadConcern)
+            .FindAsync(FilterId(id));
 
-    public abstract Task<ICollection<TEntity>> GetAllAsync();
+        return await cursor.FirstOrDefaultAsync();
+    }
 
-    public abstract Task<TEntity> CreateAsync(TEntity entity);
+    public virtual async Task<ICollection<TEntity>> GetAllAsync()
+    {
+        var cursor = await GetCollection(ReadPreferenceMode.SecondaryPreferred, readConcern: ReadConcern)
+            .FindAsync(Builders<TEntity>.Filter.Empty);
 
-    public abstract Task<TEntity> UpdateAsync(TEntity entity);
+        return await cursor.ToListAsync();
+    }
 
-    public abstract Task DeleteAsync(TId id);
+    public virtual async Task<TEntity> CreateAsync(TEntity entity)
+    {
+        await GetCollection(ReadPreferenceMode.Primary, WriteConcern.WMajority)
+            .InsertOneAsync(entity);
+
+        return entity;
+    }
+
+    public virtual async Task<TEntity> UpdateAsync(TEntity entity)
+    {
+        await GetCollection(ReadPreferenceMode.Primary, WriteConcern.WMajority)
+            .ReplaceOneAsync(FilterId(entity.Id), entity);
+
+        return entity;
+    }
+
+    public virtual async Task DeleteAsync(TId id) 
+    {
+        await GetCollection(ReadPreferenceMode.PrimaryPreferred, WriteConcern.WMajority)
+            .DeleteOneAsync(FilterId(id));
+    }
+
+    protected FilterDefinition<TEntity> FilterId(TId id)
+    {
+        return Builders<TEntity>.Filter.Eq(x => x.Id, id);
+    }
 }
