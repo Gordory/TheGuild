@@ -12,6 +12,7 @@ public class GuildActorProviderTests
     private const ulong ServerId = 111;
     private const ulong MemberId = 222;
     private const ulong RaiderDiscordRoleId = 333;
+    private static readonly Guid MemberUserId = Guid.NewGuid();
     private const ulong OfficerDiscordRoleId = 444;
 
     [Fact]
@@ -31,7 +32,7 @@ public class GuildActorProviderTests
     public async Task A_role_naming_the_member_outright_grants_without_any_discord_role()
     {
         var provider = Provider(
-            Guild(Role("Treasurer", discordUserIds: new[] { MemberId },
+            Guild(Role("Treasurer", userIds: new[] { MemberUserId },
                 grants: PermissionCatalog.AttendanceWarning.ReadAny)),
             memberRoleIds: Array.Empty<ulong>());
 
@@ -114,6 +115,7 @@ public class GuildActorProviderTests
         return new GuildActorProvider(
             new FakeGuildRepository(guild),
             new FakeGuildMemberRolesReader(memberRoleIds),
+            new FakeGuildMemberAccountResolver((MemberId, MemberUserId)),
             new MemoryCache(new MemoryCacheOptions()));
     }
 
@@ -130,7 +132,7 @@ public class GuildActorProviderTests
     private static GuildRole Role(
         string name,
         ulong[]? discordRoleIds = null,
-        ulong[]? discordUserIds = null,
+        Guid[]? userIds = null,
         params string[] grants)
     {
         return new GuildRole
@@ -138,7 +140,7 @@ public class GuildActorProviderTests
             Id = Guid.NewGuid(),
             Name = name,
             DiscordRoleIds = discordRoleIds ?? Array.Empty<ulong>(),
-            DiscordUserIds = discordUserIds ?? Array.Empty<ulong>(),
+            UserIds = userIds ?? Array.Empty<Guid>(),
             Grants = grants.Select(grant => new PermissionGrant(grant)).ToArray(),
         };
     }

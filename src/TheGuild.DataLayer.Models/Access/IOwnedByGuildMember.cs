@@ -1,11 +1,11 @@
 namespace TheGuild.DataLayer.Models.Access;
 
 /// <summary>
-/// A record that belongs to one guild member. The distinction the old flags drew between acting on
-/// your own record and on someone else's lives here instead: the permission names a verb, and
-/// ownership of the loaded resource decides which of the pair has to be held.
+/// A record that belongs to one guild member, identified by their account here rather than by a
+/// Discord id: Discord is one way into an account among several, and a person must keep their
+/// records after switching providers.
 /// </summary>
 public interface IOwnedByGuildMember
 {
-    ulong OwnerDiscordUserId { get; }
+    Guid OwnerUserId { get; }
 }

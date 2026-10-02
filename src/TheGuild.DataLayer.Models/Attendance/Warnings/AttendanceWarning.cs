@@ -13,7 +13,7 @@ public record AttendanceWarning : IIdentifiedEntity<Guid>, IOwnedByGuildMember
 
     public ulong DiscordServerId { get; init; } 
 
-    public ulong DiscordUserId { get; init; }
+    public Guid UserId { get; init; }
 
     public AttendanceWarningType Type { get; init; }
 
@@ -29,5 +29,5 @@ public record AttendanceWarning : IIdentifiedEntity<Guid>, IOwnedByGuildMember
 
     public DateTime? Updated { get; init; }
 
-    public ulong OwnerDiscordUserId => DiscordUserId;
+    public Guid OwnerUserId => UserId;
 }

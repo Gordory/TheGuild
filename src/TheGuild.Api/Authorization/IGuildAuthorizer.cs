@@ -13,6 +13,13 @@ public interface IGuildAuthorizer
     /// </summary>
     bool IsAllowed(GuildActor actor, PermissionPair permission, IOwnedByGuildMember? resource = null);
 
+    /// <summary>
+    /// The same decision where ownership has already been established by other means -- creating a
+    /// record about someone, for instance, where comparing the two people does not need the record to
+    /// exist first, and must not create an account as a side effect of being refused.
+    /// </summary>
+    bool IsAllowedFor(GuildActor actor, PermissionPair permission, bool isOwnRecord);
+
     AccessScope ResolveScope(GuildActor actor, PermissionPair permission);
 }
 
@@ -20,19 +27,20 @@ public sealed class GuildAuthorizer : IGuildAuthorizer
 {
     public bool IsAllowed(GuildActor actor, PermissionPair permission, IOwnedByGuildMember? resource = null)
     {
-        if (actor.Has(permission.Any))
-        {
-            return true;
-        }
+        // No resource means the request was never narrowed to the actor's own record, so holding only
+        // the narrower permission cannot satisfy it.
+        var isOwnRecord = resource is not null
+                          && actor.UserId is not null
+                          && resource.OwnerUserId == actor.UserId;
 
-        // No resource means the request was never narrowed to the actor's own record, so holding
-        // only the narrower permission cannot satisfy it.
-        if (resource is null)
-        {
-            return false;
-        }
+        return resource is null
+            ? actor.Has(permission.Any)
+            : IsAllowedFor(actor, permission, isOwnRecord);
+    }
 
-        return resource.OwnerDiscordUserId == actor.DiscordUserId && actor.Has(permission.Own);
+    public bool IsAllowedFor(GuildActor actor, PermissionPair permission, bool isOwnRecord)
+    {
+        return actor.Has(permission.Any) || (isOwnRecord && actor.Has(permission.Own));
     }
 
     public AccessScope ResolveScope(GuildActor actor, PermissionPair permission)

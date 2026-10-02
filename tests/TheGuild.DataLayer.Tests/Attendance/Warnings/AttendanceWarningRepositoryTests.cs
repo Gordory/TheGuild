@@ -9,7 +9,7 @@ public class AttendanceWarningRepositoryTests : IClassFixture<MongoContainerFixt
 {
     private const ulong OwnGuild = 111;
     private const ulong OtherGuild = 222;
-    private const ulong Member = 333;
+    private static readonly Guid Member = Guid.NewGuid();
 
     private readonly MongoContainerFixture _mongo;
     private readonly AttendanceWarningRepository _repository;
@@ -72,7 +72,7 @@ public class AttendanceWarningRepositoryTests : IClassFixture<MongoContainerFixt
         {
             Id = Guid.NewGuid(),
             DiscordServerId = discordServerId,
-            DiscordUserId = Member,
+            UserId = Member,
             Type = AttendanceWarningType.Late,
             DateStart = dateStart,
             PublicComment = "Public",

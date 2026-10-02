@@ -7,7 +7,7 @@ namespace TheGuild.DataLayer.Attendance.Warnings;
 
 public interface IAttendanceWarningRepository : IRepositoryBase<AttendanceWarning, Guid>
 {
-    Task<ICollection<AttendanceWarning>> Find(ulong discordServerId, DateTime dateTime, ulong? discordUserId = null);
+    Task<ICollection<AttendanceWarning>> Find(ulong discordServerId, DateTime dateTime, Guid? userId = null);
 
     /// <summary>
     /// Guild-scoped counterpart of <see cref="IReadOnlyRepository{TEntity,TId}.FindAsync"/>: the id alone
@@ -25,7 +25,7 @@ public class AttendanceWarningRepository : RepositoryBase<AttendanceWarning, Gui
     {
     }
 
-    public async Task<ICollection<AttendanceWarning>> Find(ulong discordServerId, DateTime dateTime, ulong? discordUserId = null)
+    public async Task<ICollection<AttendanceWarning>> Find(ulong discordServerId, DateTime dateTime, Guid? userId = null)
     {
         var utcDate = dateTime.ToUniversalTime().Date;
 
@@ -39,10 +39,10 @@ public class AttendanceWarningRepository : RepositoryBase<AttendanceWarning, Gui
                     Builders<AttendanceWarning>.Filter.Lte(x => x.DateStart, utcDate),
                     Builders<AttendanceWarning>.Filter.Gte(x => x.DateEnd, utcDate))));
 
-        if (discordUserId != null)
+        if (userId != null)
             filter = Builders<AttendanceWarning>.Filter.And(
                 filter,
-                Builders<AttendanceWarning>.Filter.Eq(x => x.DiscordUserId, discordUserId));
+                Builders<AttendanceWarning>.Filter.Eq(x => x.UserId, userId));
 
         var collection = await GetCollection(ReadPreferenceMode.SecondaryPreferred, readConcern: ReadConcern)
             .FindAsync(filter);

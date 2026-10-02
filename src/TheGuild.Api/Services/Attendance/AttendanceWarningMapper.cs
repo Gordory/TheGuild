@@ -20,7 +20,7 @@ public static class AttendanceWarningMapper
         {
             Id = warning.Id,
             DiscordServerId = warning.DiscordServerId,
-            DiscordUserId = warning.DiscordUserId,
+            UserId = warning.UserId,
             Type = (ApiAttendanceWarningType)warning.Type,
             DateStart = warning.DateStart,
             DateEnd = warning.DateEnd,

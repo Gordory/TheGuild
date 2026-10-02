@@ -16,15 +16,15 @@ internal sealed class FakeAttendanceWarningRepository : IAttendanceWarningReposi
     /// What the service actually asked the database for. The point of the scope is that it arrives
     /// here as a filter, so the tests assert on the arguments rather than on the rows returned.
     /// </summary>
-    public (ulong DiscordServerId, DateTime Date, ulong? DiscordUserId)? LastFind { get; private set; }
+    public (ulong DiscordServerId, DateTime Date, Guid? UserId)? LastFind { get; private set; }
 
-    public Task<ICollection<AttendanceWarning>> Find(ulong discordServerId, DateTime dateTime, ulong? discordUserId = null)
+    public Task<ICollection<AttendanceWarning>> Find(ulong discordServerId, DateTime dateTime, Guid? userId = null)
     {
-        LastFind = (discordServerId, dateTime, discordUserId);
+        LastFind = (discordServerId, dateTime, userId);
 
         ICollection<AttendanceWarning> found = _warnings
             .Where(warning => warning.DiscordServerId == discordServerId)
-            .Where(warning => discordUserId is null || warning.DiscordUserId == discordUserId)
+            .Where(warning => userId is null || warning.UserId == userId)
             .ToArray();
 
         return Task.FromResult(found);

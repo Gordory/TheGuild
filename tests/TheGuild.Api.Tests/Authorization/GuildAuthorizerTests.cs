@@ -6,8 +6,8 @@ namespace TheGuild.Api.Tests.Authorization;
 
 public class GuildAuthorizerTests
 {
-    private const ulong MemberId = 222;
-    private const ulong SomeoneElseId = 999;
+    private static readonly Guid MemberId = Guid.NewGuid();
+    private static readonly Guid SomeoneElseId = Guid.NewGuid();
 
     private static readonly PermissionPair Update = PermissionCatalog.AttendanceWarning.Update;
 
@@ -75,15 +75,15 @@ public class GuildAuthorizerTests
     {
         return new GuildActor
         {
-            DiscordUserId = MemberId,
+            UserId = MemberId,
             Permissions = PermissionCatalog.Expand(permissions),
         };
     }
 
-    private static IOwnedByGuildMember Owned(ulong ownerDiscordUserId)
+    private static IOwnedByGuildMember Owned(Guid ownerUserId)
     {
-        return new StubOwnedRecord(ownerDiscordUserId);
+        return new StubOwnedRecord(ownerUserId);
     }
 
-    private sealed record StubOwnedRecord(ulong OwnerDiscordUserId) : IOwnedByGuildMember;
+    private sealed record StubOwnedRecord(Guid OwnerUserId) : IOwnedByGuildMember;
 }

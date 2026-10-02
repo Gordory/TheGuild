@@ -35,6 +35,7 @@ builder.Services.AddSingleton<IGuildMemberRolesReader, DiscordGuildMemberRolesRe
 builder.Services.AddSingleton<IGuildActorProvider, GuildActorProvider>();
 builder.Services.AddSingleton<IGuildAuthorizer, GuildAuthorizer>();
 builder.Services.AddSingleton<IGuildActorAccessor, GuildActorAccessor>();
+builder.Services.AddScoped<IGuildMemberAccountResolver, GuildMemberAccountResolver>();
 builder.Services.AddDiscordClient(builder.Configuration);
 builder.Services.AddSingleton<IMongoClientProvider, MongoClientProvider>();
 builder.Services.AddSingleton<IMongoDatabaseProvider, MongoDatabaseProvider>();

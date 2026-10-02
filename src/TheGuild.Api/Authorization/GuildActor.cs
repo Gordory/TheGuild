@@ -8,7 +8,17 @@ public sealed record GuildActor
 {
     public ulong DiscordServerId { get; init; }
 
+    /// <summary>
+    /// How Discord names this person. Needed to read their roles, which is where guild membership
+    /// comes from, and the only identifier a bot can supply.
+    /// </summary>
     public ulong DiscordUserId { get; init; }
+
+    /// <summary>
+    /// The account that identifies the person here. Absent for someone who has never signed in: they
+    /// still hold whatever their Discord roles grant, just nothing granted to them personally.
+    /// </summary>
+    public Guid? UserId { get; init; }
 
     public IReadOnlySet<string> Permissions { get; init; } = new HashSet<string>();
 

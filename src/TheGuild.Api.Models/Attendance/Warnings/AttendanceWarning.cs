@@ -6,7 +6,7 @@ public record AttendanceWarning
 
     public ulong DiscordServerId { get; init; } 
 
-    public ulong DiscordUserId { get; init; }
+    public Guid UserId { get; init; }
 
     public AttendanceWarningType Type { get; init; }
 

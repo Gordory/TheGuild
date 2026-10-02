@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using TheGuild.Api.Authentication.External;
 using TheGuild.DataLayer.Guilds;
 using TheGuild.DataLayer.Models.Access;
 using TheGuild.DataLayer.Models.Guilds;
@@ -18,15 +19,18 @@ public sealed class GuildActorProvider : IGuildActorProvider
 
     private readonly IGuildRepository _guildRepository;
     private readonly IGuildMemberRolesReader _memberRolesReader;
+    private readonly IGuildMemberAccountResolver _accounts;
     private readonly IMemoryCache _cache;
 
     public GuildActorProvider(
         IGuildRepository guildRepository,
         IGuildMemberRolesReader memberRolesReader,
+        IGuildMemberAccountResolver accounts,
         IMemoryCache cache)
     {
         _guildRepository = guildRepository;
         _memberRolesReader = memberRolesReader;
+        _accounts = accounts;
         _cache = cache;
     }
 
@@ -47,8 +51,13 @@ public sealed class GuildActorProvider : IGuildActorProvider
 
         var memberRoleIds = await _memberRolesReader.GetRoleIdsAsync(discordServerId, discordUserId);
 
+        // Looked up, never created: resolving an actor happens on every request, including plain
+        // reads, and those must not leave accounts behind. Someone who has never signed in simply
+        // matches no role that names members personally.
+        var userId = await _accounts.FindAsync(discordUserId);
+
         var grantingRoles = guild.GuildRoles
-            .Where(role => Matches(role, discordUserId, memberRoleIds))
+            .Where(role => Matches(role, userId, memberRoleIds))
             .Where(role => role.Grants.Length > 0)
             .ToArray();
 
@@ -60,14 +69,15 @@ public sealed class GuildActorProvider : IGuildActorProvider
         {
             DiscordServerId = discordServerId,
             DiscordUserId = discordUserId,
+            UserId = userId,
             Permissions = PermissionCatalog.Expand(granted),
             GrantedBy = grantingRoles.Select(role => role.Id).ToArray(),
         };
     }
 
-    private static bool Matches(GuildRole role, ulong discordUserId, ulong[] memberRoleIds)
+    private static bool Matches(GuildRole role, Guid? userId, ulong[] memberRoleIds)
     {
-        return role.DiscordUserIds.Contains(discordUserId)
+        return (userId is not null && role.UserIds.Contains(userId.Value))
                || role.DiscordRoleIds.Any(memberRoleIds.Contains);
     }
 
