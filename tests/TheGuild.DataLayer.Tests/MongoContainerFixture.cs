@@ -12,13 +12,30 @@ public class MongoContainerFixture : IAsyncLifetime
 {
     private readonly MongoDbContainer _container = new MongoDbBuilder("mongo:6.0").Build();
 
+    private const string DatabaseName = "theguild-tests";
+
     public IMongoDatabase Database { get; private set; } = null!;
+
+    /// <summary>
+    /// The Identity store reads the database out of its connection string, so it needs one that names
+    /// the database — and an explicit authentication source, since authenticating against the test
+    /// database rather than admin would be rejected.
+    /// </summary>
+    public string IdentityConnectionString { get; private set; } = null!;
 
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
 
-        Database = new MongoClient(_container.GetConnectionString()).GetDatabase("theguild-tests");
+        var connectionString = _container.GetConnectionString();
+
+        Database = new MongoClient(connectionString).GetDatabase(DatabaseName);
+
+        IdentityConnectionString = new MongoUrlBuilder(connectionString)
+        {
+            DatabaseName = DatabaseName,
+            AuthenticationSource = "admin",
+        }.ToString();
     }
 
     public async Task DisposeAsync()
